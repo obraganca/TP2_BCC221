@@ -7,16 +7,20 @@ import com.termo.gui.components.LetterBox;
 import com.termo.gui.components.RoundedBorder;
 
 public class GameWindow {
+    private int currentRow;
     private JFrame mainFrame;
     private JLabel headerLabel;
     private JLabel statusLabel;
     private JPanel controlPanel;
+    private static LetterBox[] letterBoxes;
 
     public GameWindow(){
         prepareGUI();
     }
 
     private void prepareGUI(){
+        currentRow = 0;
+        letterBoxes = new LetterBox[5];
         mainFrame = new JFrame("TERMO");
         ImageIcon termoIcon = null;
 
@@ -66,10 +70,16 @@ public class GameWindow {
                 box.setBorder(new RoundedBorder(15, "#4c4347", 6));
                 box.setBackground(new Color(0,0,0,0));
                 controlPanel.add(box);
+                box.setEditable(row == currentRow);
+                letterBoxes[col] = box;
             }
         }
 
         controlPanel.revalidate();
         controlPanel.repaint();
+    }
+
+    public static LetterBox[] getLetterBoxes() {
+        return letterBoxes;
     }
 }

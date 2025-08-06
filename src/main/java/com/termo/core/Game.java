@@ -5,14 +5,18 @@ import com.termo.gui.GameWindow;
 import java.util.Map;
 import java.util.HashMap;
 
-public class game {
+public class Game {
     String palavratentativa;
     char[] coresresultado = new char[5]; // o vetor de char coresresultado tem os valores G Y ou B em cada uma das posições armazenando um sinal para a cor de cada letra da tentativa atual
     String palavra;
-    public game(String palavra) {
+    public Game(String palavra) {
         this.palavra = palavra;
     }
-    void tentativa(String chute) {
+    public boolean tentativa(String chute) {
+        if (chute.length() != 5) {
+            System.out.println("Tentativa inválida: precisa de 5 letras.");
+            return false;
+        }
         Map<Character, Integer> contagem = new HashMap<>();
 
         /* Conta quantas; vezes cada letra aparece na palavra secreta */
@@ -31,14 +35,21 @@ public class game {
             else
                 coresresultado[i] = 'B';
         }
+        for (int i = 0; i < 5; i++){
+            System.out.printf("%c",  coresresultado[i]);
+        }
+        return true;
     }
 
     //getters e setters
-    public void setpalavratentativa(){
+    public void setapalavratentativa(){
         this.palavratentativa = "";
         for (int i = 0; i < 5; i++) {
-            this.palavratentativa = this.palavratentativa + GameWindow.getLetterBoxes()[i].getText();
+            this.palavratentativa += GameWindow.getLetterBoxes()[i].getText();
         }
+    }
+    public String getpalavratentativa(){
+        return this.palavratentativa;
     }
     public void setPalavra(String palavra) {
         this.palavra = palavra;

@@ -4,8 +4,10 @@ import com.termo.gui.GameWindow;
 
 public class TermoApp {
     public static void main(String[] args) {
+        String resposta = "TESTE";
         javax.swing.SwingUtilities.invokeLater(() -> {
-            new GameWindow().showEventDemo();
+            new GameWindow(resposta).showEventDemo();
         });
+
     }
 }

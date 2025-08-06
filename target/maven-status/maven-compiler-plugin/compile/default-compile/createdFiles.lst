@@ -1,6 +1,7 @@
 com/termo/gui/components/RoundedBorder.class
+com/termo/core/Game.class
 com/termo/gui/components/LetterBox.class
 com/termo/gui/GameWindow.class
 com/termo/TermoApp.class
 com/termo/gui/components/LetterBox$LimitDocument.class
-com/termo/core/game.class
+com/termo/gui/GameWindow$1.class

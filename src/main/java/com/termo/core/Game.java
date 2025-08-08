@@ -1,18 +1,22 @@
 package com.termo.core;
 
 import com.termo.gui.GameWindow;
+import com.termo.model.DataSourceModel;
 
 import java.util.Map;
 import java.util.HashMap;
 
 public class Game {
-    String palavratentativa;
-    char[] coresresultado = new char[5]; // o vetor de char coresresultado tem os valores G Y ou B em cada uma das posições armazenando um sinal para a cor de cada letra da tentativa atual
-    String palavra;
-    public Game(String palavra) {
-        this.palavra = palavra;
+    private String palavratentativa;
+    private int rightQuantityWord=0;
+    private char[] coresresultado = new char[5]; // o vetor de char coresresultado tem os valores G Y ou B em cada uma das posições armazenando um sinal para a cor de cada letra da tentativa atual
+    private DataSourceModel dataSourceModel;
+    public Game() {
+        this.dataSourceModel = new DataSourceModel();
+        System.out.println(this.dataSourceModel.getWord());
     }
-    public boolean tentativa(String chute) {
+    public boolean validateGuess(String chute) {
+        rightQuantityWord=0;
         if (chute.length() != 5) {
             System.out.println("Tentativa inválida: precisa de 5 letras.");
             return false;
@@ -20,42 +24,44 @@ public class Game {
         Map<Character, Integer> contagem = new HashMap<>();
 
         /* Conta quantas; vezes cada letra aparece na palavra secreta */
-        for (char c : palavra.toCharArray()) {
+        for (char c : dataSourceModel.getWord().toUpperCase().toCharArray()) {
             contagem.put(c, contagem.getOrDefault(c, 0) + 1);
         }
-        for (int i = 0; i < palavra.length(); i++) {
-            if (chute.charAt(i) == palavra.charAt(i)){
+        for (int i = 0; i < dataSourceModel.getWord().length(); i++) {
+            if (chute.toUpperCase().charAt(i) == dataSourceModel.getWord().toUpperCase().charAt(i)){
                 coresresultado[i] = 'G';
-                contagem.put(palavra.charAt(i), contagem.get(chute.charAt(i)) - 1);
+                rightQuantityWord++;
+                contagem.put(dataSourceModel.getWord().toUpperCase().charAt(i), contagem.get(chute.toUpperCase().charAt(i)) - 1);
+            }else{
+                coresresultado[i] = 'B';
             }
         }
         for (int i = 0; i < chute.length(); i++) {
             if (coresresultado[i] == 'G') continue;
-            if (contagem.getOrDefault(chute.charAt(i), 0) > 0) coresresultado[i] = 'Y';
+            if (contagem.getOrDefault(chute.toUpperCase().charAt(i), 0) > 0) coresresultado[i] = 'Y';
             else
                 coresresultado[i] = 'B';
-        }
-        for (int i = 0; i < 5; i++){
-            System.out.printf("%c",  coresresultado[i]);
         }
         return true;
     }
 
-    //getters e setters
-    public void setapalavratentativa(){
-        this.palavratentativa = "";
-        for (int i = 0; i < 5; i++) {
-            this.palavratentativa += GameWindow.getLetterBoxes()[i].getText();
-        }
+
+    public int getWordLength(){
+        return this.dataSourceModel.getWord().length();
+    }
+
+    public int getRightQuantityWord() {
+        return rightQuantityWord;
+    }
+
+    public void setRightQuantityWord(int rightQuantityWord) {
+        this.rightQuantityWord = rightQuantityWord;
     }
     public String getpalavratentativa(){
         return this.palavratentativa;
     }
-    public void setPalavra(String palavra) {
-        this.palavra = palavra;
-    }
     public String getPalavra() {
-        return palavra;
+        return this.dataSourceModel.getWord();
     }
     public char[] getResultado(){
         return coresresultado;

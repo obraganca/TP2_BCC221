@@ -1,5 +1,6 @@
-/home/frolho/IdeaProjects/TP2_BCC221/src/main/java/com/termo/gui/GameWindow.java
-/home/frolho/IdeaProjects/TP2_BCC221/src/main/java/com/termo/gui/components/RoundedBorder.java
-/home/frolho/IdeaProjects/TP2_BCC221/src/main/java/com/termo/gui/components/LetterBox.java
-/home/frolho/IdeaProjects/TP2_BCC221/src/main/java/com/termo/TermoApp.java
-/home/frolho/IdeaProjects/TP2_BCC221/src/main/java/com/termo/core/Game.java
+/home/obraganca/Documents/BCC221/TP2/src/main/java/com/termo/gui/components/LetterBox.java
+/home/obraganca/Documents/BCC221/TP2/src/main/java/com/termo/gui/components/RoundedBorder.java
+/home/obraganca/Documents/BCC221/TP2/src/main/java/com/termo/gui/GameWindow.java
+/home/obraganca/Documents/BCC221/TP2/src/main/java/com/termo/core/Game.java
+/home/obraganca/Documents/BCC221/TP2/src/main/java/com/termo/TermoApp.java
+/home/obraganca/Documents/BCC221/TP2/src/main/java/com/termo/model/DataSourceModel.java

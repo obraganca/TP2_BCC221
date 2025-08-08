@@ -1,38 +1,37 @@
 package com.termo.gui.components;
 
-
 import javax.swing.border.AbstractBorder;
 import java.awt.*;
 
 public class RoundedBorder extends AbstractBorder {
     private int radius;
-    private String color;
-    private int stroke;
+    private Color color;
+    private int thickness;
 
-    public RoundedBorder(int radius, String color, int stroke) {
+    public RoundedBorder(int radius, String hexColor, int thickness) {
         this.radius = radius;
-        this.color = color;
-        this.stroke = stroke;
+        this.color = Color.decode(hexColor);
+        this.thickness = thickness;
     }
 
     @Override
-    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setColor(Color.decode(this.color)); // Border color
-        g2.setStroke(new BasicStroke(this.stroke)); // Border thickness
-        g2.drawRoundRect(x, y, width - 2, height - 2, radius, radius);
-
-        g2.dispose();
+    public void paintBorder(Component c, Graphics g, int x, int y,
+                            int width, int height) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setColor(color);
+        g2.setStroke(new BasicStroke(thickness));
+        g2.drawRoundRect(x, y, width-1, height-1, radius, radius);
     }
 
     @Override
     public Insets getBorderInsets(Component c) {
-        return new Insets(radius / 2, radius / 2, radius / 2, radius / 2);
+        return new Insets(radius+1, radius+1, radius+2, radius);
     }
 
     @Override
     public Insets getBorderInsets(Component c, Insets insets) {
-        insets.set(radius / 2, radius / 2, radius / 2, radius / 2);
+        insets.left = insets.right = radius;
+        insets.top = insets.bottom = radius;
         return insets;
     }
 }

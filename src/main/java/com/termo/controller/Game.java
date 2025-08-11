@@ -1,6 +1,5 @@
-package com.termo.core;
+package com.termo.controller;
 
-import com.termo.gui.GameWindow;
 import com.termo.model.DataSourceModel;
 
 import java.util.Map;
@@ -19,6 +18,10 @@ public class Game {
         rightQuantityWord=0;
         if (chute.length() != 5) {
             System.out.println("Tentativa inválida: precisa de 5 letras.");
+            return false;
+        }
+
+        if(!dataSourceModel.searchWord(chute)){
             return false;
         }
         Map<Character, Integer> contagem = new HashMap<>();

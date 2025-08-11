@@ -31,6 +31,22 @@ public class DataSourceModel {
             throw new RuntimeException(e);
         }
     }
+
+    public Boolean searchWord(String word){
+        try {
+            File myFile = new File(DataSourceModel.class.getResource("/"+filename).toURI());
+            RandomAccessFile data = new RandomAccessFile(myFile, "r");
+            String line;
+            while ((line = data.readLine()) != null) {
+                if(line.toUpperCase().equals(word)){
+                    return true;
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
     public String getWord() {
         return word;
     }

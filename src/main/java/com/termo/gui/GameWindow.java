@@ -27,6 +27,8 @@ public class GameWindow {
 
     // mapa letra -> botão do teclado virtual
     private final Map<Character, JButton> keyButtons = new HashMap<>();
+    private StatsOverlay statsOverlay;
+
 
     public GameWindow() {
         jogo = new Game();
@@ -66,10 +68,43 @@ public class GameWindow {
         controlPanel.setPreferredSize(new Dimension(440, 500));
         controlPanel.setOpaque(false);
 
+
         headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
-        headerLabel.setPreferredSize(new Dimension(50, 50));
-        headerPanel.add(headerLabel, BorderLayout.NORTH);
+
+        // cria a linha superior que contém um botão à esquerda, o título (centro) e um botão à direita
+        // linha superior: botão-esquerdo, título e botão-direito todos na mesma linha,
+        // com gaps muito pequenos para ficarem próximos ao título
+        JPanel topRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 6));
+        topRow.setOpaque(false);
+        topRow.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
+
+        // botão esquerdo (muito próximo ao título)
+        JButton leftBtn = makeHeaderButton("📊");
+        leftBtn.setToolTipText("Estatísticas");
+        leftBtn.setPreferredSize(new Dimension(34, 34)); // ainda menor
+        leftBtn.addActionListener(e -> {
+            if (statsOverlay == null) statsOverlay = new StatsOverlay(mainFrame);
+            statsOverlay.show(false);
+        });
+
+        // título
+        headerLabel.setHorizontalAlignment(JLabel.CENTER);
+        headerLabel.setFont(new Font("Arial", Font.BOLD, 32));
+        headerLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6)); // pequeno padding interno
+
+        // botão direito (muito próximo ao título)
+        JButton rightBtn = makeHeaderButton("⚙");
+        rightBtn.setToolTipText("Configurações");
+        rightBtn.setPreferredSize(new Dimension(34, 34));
+
+        // adiciona na ordem: left, title, right — tudo centralizado
+        topRow.add(leftBtn);
+        topRow.add(headerLabel);
+        topRow.add(rightBtn);
+
+        headerPanel.add(topRow, BorderLayout.NORTH);
+
 
         // warnLabel
         JPanel warnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
@@ -278,7 +313,57 @@ public class GameWindow {
         controlPanel.revalidate();
         controlPanel.repaint();
         mainFrame.setVisible(true);
+        statsOverlay = new StatsOverlay(mainFrame);
+
     }
+
+    /**
+     * Cria um botão pequeno para o header (ícone/texto).
+     */
+    private JButton makeHeaderButton(String label) {
+        JButton b = new JButton(label);
+        b.setFocusable(false);
+        b.setFont(new Font("Arial", Font.BOLD, 16));
+        // menor preferred size para ficar próximo ao título
+        b.setPreferredSize(new Dimension(36, 36));
+        b.setMargin(new Insets(2, 2, 2, 2));
+        b.setBackground(Color.decode("#3d3a3b"));
+        b.setForeground(Color.WHITE);
+        b.setBorder(new RoundedBorder(8, "#3d3a3b", 2));
+        b.setOpaque(true);
+        return b;
+    }
+
+
+
+    /**
+     * Cria (e retorna) o painel com os botões do header (estatísticas, config).
+     * Agora não adiciona diretamente ao headerPanel — quem chama decide onde posicionar.
+     */
+    private JPanel createHeaderButtonsPanel() {
+        JPanel headerButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        headerButtons.setOpaque(false);
+
+        // botão estatísticas (use um emoji/ícone ou texto)
+        JButton statsBtn = makeHeaderButton("📊");
+        statsBtn.setToolTipText("Estatísticas");
+        statsBtn.addActionListener(e -> {
+            if (statsOverlay == null) {
+                statsOverlay = new StatsOverlay(mainFrame);
+            }
+            statsOverlay.show(false);
+        });
+        headerButtons.add(statsBtn);
+
+        // botão de configurações
+        JButton settingsBtn = makeHeaderButton("⚙");
+        settingsBtn.setToolTipText("Configurações");
+        headerButtons.add(settingsBtn);
+
+        return headerButtons;
+    }
+
+
 
     private void handleKeyPress(KeyEvent e, int row, int col) {
         if (row != currentRow) return;
@@ -344,6 +429,11 @@ public class GameWindow {
                 } else {
                     controlPanel.requestFocus();
                     setWarnMessage("Fim do jogo !");
+
+                    boolean won = jogo.getRightQuantityWord() == jogo.getWordLength();
+                    statsOverlay.recordGame(won, won ? currentRow + 1 : 0);
+                    statsOverlay.show(won);
+
                 }
             } else {
                 setWarnMessage("essa palavra não é aceita");

@@ -24,6 +24,9 @@ public class DataSourceModel {
         try {
             File myFile = new File(DataSourceModel.class.getResource("/"+filename).toURI());
             RandomAccessFile data = new RandomAccessFile(myFile, "r");
+
+            Random posicaoaleatoria = new Random();
+            data.seek(posicaoaleatoria.nextInt((int)data.length()));
             String text = data.readLine();
             data.close();
             return text;

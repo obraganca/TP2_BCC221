@@ -2,6 +2,7 @@ com/termo/gui/components/RoundedBorder.class
 com/termo/gui/StatsOverlay$Stats.class
 com/termo/controller/Game.class
 com/termo/gui/components/LetterBox.class
+com/termo/gui/GameWindow$2.class
 com/termo/gui/StatsOverlay$3.class
 com/termo/gui/GameWindow.class
 com/termo/model/DataSourceModel.class
@@ -11,4 +12,5 @@ com/termo/gui/StatsOverlay$4.class
 com/termo/gui/GameWindow$1.class
 com/termo/gui/StatsOverlay.class
 com/termo/gui/StatsOverlay$1.class
+com/termo/gui/GameWindow$3.class
 com/termo/gui/StatsOverlay$2.class

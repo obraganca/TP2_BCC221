@@ -7,8 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 /**
- * Overlay de estatísticas (independente de GameWindow).
- * Requer a classe RoundedBorder no mesmo projeto.
+ * Overlay de estatísticas responsivo (independente de GameWindow).
  */
 public class StatsOverlay {
 
@@ -31,8 +30,6 @@ public class StatsOverlay {
         this.layered = owner.getLayeredPane();
     }
 
-    // inicializa os componentes (chame quando owner já tiver tamanho adequado;
-    // é seguro chamar mais de uma vez)
     private void initIfNeeded() {
         if (initialized) return;
         initialized = true;
@@ -44,30 +41,30 @@ public class StatsOverlay {
         overlayPanel.setVisible(false);
         overlayPanel.setFocusable(true);
 
-        // card central
+        // card central responsivo
         statsCard = new JPanel();
         statsCard.setLayout(new BoxLayout(statsCard, BoxLayout.Y_AXIS));
         statsCard.setBackground(Color.decode("#2f292a"));
         statsCard.setBorder(new RoundedBorder(12, "#2f292a", 6));
         statsCard.setOpaque(true);
 
-        int cardW = Math.min(780, owner.getWidth() - 200);
-        int cardH = Math.min(720, owner.getHeight() - 200);
-        statsCard.setBounds((owner.getWidth() - cardW) / 2, (owner.getHeight() - cardH) / 2, cardW, cardH);
-        statsCard.setPreferredSize(new Dimension(cardW, cardH));
-        statsCard.setMaximumSize(new Dimension(cardW, cardH));
+        updateCardSize();
 
         // topo com título e botão fechar
         JPanel topRow = new JPanel(new BorderLayout());
         topRow.setOpaque(false);
+
         JLabel title = new JLabel("progresso", JLabel.CENTER);
         title.setForeground(Color.WHITE);
-        title.setFont(new Font("Arial", Font.BOLD, 24));
+        // fonte responsiva
+        int titleSize = Math.max(18, Math.min(32, owner.getWidth() / 30));
+        title.setFont(new Font("Arial", Font.BOLD, titleSize));
         topRow.add(title, BorderLayout.CENTER);
 
         JButton closeBtn = new JButton("X");
         closeBtn.setFocusable(false);
-        closeBtn.setPreferredSize(new Dimension(38, 28));
+        int btnSize = Math.max(24, Math.min(38, owner.getWidth() / 35));
+        closeBtn.setPreferredSize(new Dimension(btnSize, btnSize));
         closeBtn.setBorder(new RoundedBorder(6, "#4c4347", 2));
         closeBtn.setBackground(Color.decode("#4c4347"));
         closeBtn.setForeground(Color.WHITE);
@@ -80,8 +77,56 @@ public class StatsOverlay {
 
         statsCard.add(Box.createRigidArea(new Dimension(0, 12)));
 
-        // métricas
-        JPanel metrics = new JPanel(new GridLayout(1, 4, 8, 8));
+        // métricas responsivas
+        createMetricsPanel();
+
+        statsCard.add(Box.createRigidArea(new Dimension(0, 18)));
+
+        JLabel distTitle = new JLabel("distribuição de tentativas", JLabel.CENTER);
+        distTitle.setForeground(Color.WHITE);
+        int distTitleSize = Math.max(14, Math.min(20, owner.getWidth() / 40));
+        distTitle.setFont(new Font("Arial", Font.BOLD, distTitleSize));
+        distTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        statsCard.add(distTitle);
+
+        statsCard.add(Box.createRigidArea(new Dimension(0, 12)));
+
+        distributionContainer = new JPanel();
+        distributionContainer.setOpaque(false);
+        distributionContainer.setLayout(new BoxLayout(distributionContainer, BoxLayout.Y_AXIS));
+
+        // padding responsivo
+        int padding = Math.max(20, Math.min(50, owner.getWidth() / 25));
+        distributionContainer.setBorder(BorderFactory.createEmptyBorder(8, padding, 8, padding));
+        statsCard.add(distributionContainer);
+
+        statsCard.add(Box.createVerticalGlue());
+
+        // footer responsivo
+        createFooterPanel();
+
+        overlayPanel.add(statsCard);
+        layered.add(overlayPanel, JLayeredPane.MODAL_LAYER);
+
+        // eventos
+        setupEventListeners();
+
+        // inicializa distribuição
+        rebuildDistribution();
+    }
+
+    private void createMetricsPanel() {
+        // Decide o layout baseado no tamanho da tela
+        boolean isSmallScreen = owner.getWidth() < 800 || owner.getHeight() < 600;
+
+        JPanel metrics;
+        if (isSmallScreen) {
+            // Em telas pequenas, usa 2x2 grid
+            metrics = new JPanel(new GridLayout(2, 2, 8, 8));
+        } else {
+            // Em telas normais, usa 1x4 grid
+            metrics = new JPanel(new GridLayout(1, 4, 8, 8));
+        }
         metrics.setOpaque(false);
 
         totalGamesLabel = makeMetricPanel("0");
@@ -96,32 +141,22 @@ public class StatsOverlay {
 
         JPanel metricsWrapper = new JPanel(new BorderLayout());
         metricsWrapper.setOpaque(false);
-        metricsWrapper.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
+
+        // padding responsivo
+        int vPadding = Math.max(5, Math.min(15, owner.getHeight() / 50));
+        int hPadding = Math.max(15, Math.min(30, owner.getWidth() / 40));
+        metricsWrapper.setBorder(BorderFactory.createEmptyBorder(vPadding, hPadding, vPadding, hPadding));
         metricsWrapper.add(metrics, BorderLayout.CENTER);
         statsCard.add(metricsWrapper);
+    }
 
-        statsCard.add(Box.createRigidArea(new Dimension(0, 18)));
-
-        JLabel distTitle = new JLabel("distribuição de tentativas", JLabel.CENTER);
-        distTitle.setForeground(Color.WHITE);
-        distTitle.setFont(new Font("Arial", Font.BOLD, 20));
-        distTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        statsCard.add(distTitle);
-
-        statsCard.add(Box.createRigidArea(new Dimension(0, 12)));
-
-        distributionContainer = new JPanel();
-        distributionContainer.setOpaque(false);
-        distributionContainer.setLayout(new BoxLayout(distributionContainer, BoxLayout.Y_AXIS));
-        distributionContainer.setBorder(BorderFactory.createEmptyBorder(8, 50, 8, 50));
-        statsCard.add(distributionContainer);
-
-        statsCard.add(Box.createVerticalGlue());
-
-        // footer com botão compartilhar (render simples)
+    private void createFooterPanel() {
         JPanel footer = new JPanel(new BorderLayout());
         footer.setOpaque(false);
-        footer.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+
+        // padding responsivo
+        int padding = Math.max(10, Math.min(20, owner.getWidth() / 60));
+        footer.setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
 
         JLabel nextLabel = new JLabel("<html>próxima palavra em<br><span style='font-size:22pt'>15:02:51</span></html>");
         nextLabel.setForeground(Color.WHITE);
@@ -129,23 +164,27 @@ public class StatsOverlay {
 
         JButton share = new JButton("compartilhe");
         share.setFocusable(false);
-        share.setFont(new Font("Arial", Font.BOLD, 18));
-        share.setPreferredSize(new Dimension(200, 60));
+
+        // tamanho do botão responsivo
+        int btnWidth = Math.max(150, Math.min(200, owner.getWidth() / 6));
+        int btnHeight = Math.max(40, Math.min(60, owner.getHeight() / 15));
+        int fontSize = Math.max(12, Math.min(18, owner.getWidth() / 70));
+
+        share.setFont(new Font("Arial", Font.BOLD, fontSize));
+        share.setPreferredSize(new Dimension(btnWidth, btnHeight));
         share.setBackground(Color.decode("#049CFF"));
         share.setForeground(Color.WHITE);
         share.setBorder(new RoundedBorder(12, "#049CFF", 4));
         footer.add(share, BorderLayout.EAST);
 
         statsCard.add(footer);
+    }
 
-        overlayPanel.add(statsCard);
-        layered.add(overlayPanel, JLayeredPane.MODAL_LAYER);
-
+    private void setupEventListeners() {
         // clique fora fecha
         overlayPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                // se clicar fora do card
                 Point p = e.getPoint();
                 Rectangle bounds = statsCard.getBounds();
                 if (!bounds.contains(p)) {
@@ -154,10 +193,10 @@ public class StatsOverlay {
             }
         });
 
-        // bloqueia clique no card (para não propagar)
+        // bloqueia clique no card
         statsCard.addMouseListener(new MouseAdapter() { /* consume */ });
 
-        // ESC para fechar (quando overlay visível)
+        // ESC para fechar
         overlayPanel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -167,26 +206,86 @@ public class StatsOverlay {
             }
         });
 
-        // reposiciona no resize
+        // reposiciona e redimensiona no resize
         owner.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 overlayPanel.setBounds(0, 0, owner.getWidth(), owner.getHeight());
-                int w = statsCard.getWidth();
-                int h = statsCard.getHeight();
-                statsCard.setBounds((owner.getWidth() - w) / 2, (owner.getHeight() - h) / 2, w, h);
+                updateCardSize();
+                updateResponsiveElements();
             }
         });
+    }
 
-        // inicializa distribuição
-        rebuildDistribution();
+    private void updateCardSize() {
+        // Calcula tamanho do card baseado na tela
+        int screenWidth = owner.getWidth();
+        int screenHeight = owner.getHeight();
+
+        // Percentuais responsivos
+        double widthRatio = screenWidth < 600 ? 0.95 : (screenWidth < 1000 ? 0.85 : 0.65);
+        double heightRatio = screenHeight < 500 ? 0.95 : (screenHeight < 800 ? 0.85 : 0.75);
+
+        int cardW = (int) (screenWidth * widthRatio);
+        int cardH = (int) (screenHeight * heightRatio);
+
+        // Limites mínimos e máximos
+        cardW = Math.max(320, Math.min(780, cardW));
+        cardH = Math.max(400, Math.min(720, cardH));
+
+        statsCard.setBounds((screenWidth - cardW) / 2, (screenHeight - cardH) / 2, cardW, cardH);
+        statsCard.setPreferredSize(new Dimension(cardW, cardH));
+        statsCard.setMaximumSize(new Dimension(cardW, cardH));
+    }
+
+    private void updateResponsiveElements() {
+        if (!initialized) return;
+
+        // Atualiza fontes e tamanhos dos componentes baseado no novo tamanho
+        SwingUtilities.invokeLater(() -> {
+            // Reconstrói métricas se necessário
+            Component[] components = statsCard.getComponents();
+            for (Component comp : components) {
+                if (comp instanceof JPanel) {
+                    updatePanelFonts((JPanel) comp);
+                }
+            }
+
+            rebuildDistribution();
+            statsCard.revalidate();
+            statsCard.repaint();
+        });
+    }
+
+    private void updatePanelFonts(JPanel panel) {
+        Component[] components = panel.getComponents();
+        for (Component comp : components) {
+            if (comp instanceof JLabel) {
+                JLabel label = (JLabel) comp;
+                Font currentFont = label.getFont();
+                if (currentFont != null) {
+                    // Ajusta tamanho da fonte baseado na tela
+                    int newSize = Math.max(12, Math.min(28, owner.getWidth() / 40));
+                    if (currentFont.isBold()) {
+                        label.setFont(new Font(currentFont.getName(), Font.BOLD, newSize));
+                    } else {
+                        label.setFont(new Font(currentFont.getName(), Font.PLAIN, newSize));
+                    }
+                }
+            } else if (comp instanceof JPanel) {
+                updatePanelFonts((JPanel) comp);
+            }
+        }
     }
 
     // utilitários UI
     private JLabel makeMetricPanel(String value) {
         JLabel label = new JLabel(value, JLabel.CENTER);
         label.setForeground(Color.WHITE);
-        label.setFont(new Font("Arial", Font.BOLD, 28));
+
+        // fonte responsiva para métricas
+        int fontSize = Math.max(16, Math.min(28, owner.getWidth() / 40));
+        label.setFont(new Font("Arial", Font.BOLD, fontSize));
         label.setAlignmentX(Component.CENTER_ALIGNMENT);
         return label;
     }
@@ -197,7 +296,10 @@ public class StatsOverlay {
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
         bigLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         p.add(bigLabel);
-        JLabel legend = new JLabel("<html><div style='text-align:center; font-size:12px; color:#dcd9d9'>" + smallText + "</div></html>", JLabel.CENTER);
+
+        // texto da legenda responsivo
+        int legendSize = Math.max(10, Math.min(12, owner.getWidth() / 80));
+        JLabel legend = new JLabel("<html><div style='text-align:center; font-size:" + legendSize + "px; color:#dcd9d9'>" + smallText + "</div></html>", JLabel.CENTER);
         legend.setAlignmentX(Component.CENTER_ALIGNMENT);
         p.add(legend);
         return p;
@@ -223,21 +325,28 @@ public class StatsOverlay {
     private JPanel makeDistributionRow(String label, int count, int maxCount) {
         JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
+
         JLabel left = new JLabel(label);
         left.setForeground(Color.WHITE);
-        left.setPreferredSize(new Dimension(30, 24));
+
+        // tamanhos responsivos para distribuição
+        int labelWidth = Math.max(20, Math.min(30, owner.getWidth() / 40));
+        int rowHeight = Math.max(20, Math.min(24, owner.getHeight() / 30));
+        left.setPreferredSize(new Dimension(labelWidth, rowHeight));
         row.add(left, BorderLayout.WEST);
 
         JPanel barBg = new JPanel();
         barBg.setBackground(Color.decode("#312a2c"));
         barBg.setLayout(new BorderLayout());
-        barBg.setPreferredSize(new Dimension(420, 24));
+
+        // largura da barra responsiva
+        int maxBarWidth = Math.max(200, Math.min(420, owner.getWidth() - 200));
+        barBg.setPreferredSize(new Dimension(maxBarWidth, rowHeight));
         barBg.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
 
-        int maxWidth = 420;
-        int w = (maxCount == 0) ? 0 : (int) ((maxWidth * (double) count) / maxCount);
+        int w = (maxCount == 0) ? 0 : (int) ((maxBarWidth * (double) count) / maxCount);
         JPanel bar = new JPanel();
-        bar.setPreferredSize(new Dimension(w, 18));
+        bar.setPreferredSize(new Dimension(w, rowHeight - 6));
         bar.setBackground(Color.decode("#049CFF"));
         barBg.add(bar, BorderLayout.WEST);
 
@@ -245,7 +354,7 @@ public class StatsOverlay {
 
         JLabel right = new JLabel(String.valueOf(count));
         right.setForeground(Color.WHITE);
-        right.setPreferredSize(new Dimension(40, 24));
+        right.setPreferredSize(new Dimension(Math.max(30, Math.min(40, owner.getWidth() / 30)), rowHeight));
         right.setHorizontalAlignment(SwingConstants.CENTER);
         row.add(right, BorderLayout.EAST);
 
@@ -253,19 +362,11 @@ public class StatsOverlay {
     }
 
     // API pública
-
-    /**
-     * Registra um jogo nas estatísticas.
-     *
-     * @param win      se venceu
-     * @param attempts número de tentativas (1..6) quando venceu; ignored quando perdeu
-     */
     public void recordGame(boolean win, int attempts) {
         stats.recordGame(win, attempts);
     }
 
     public void show(boolean won) {
-        // garante init e atualiza labels
         SwingUtilities.invokeLater(() -> {
             initIfNeeded();
             totalGamesLabel.setText(String.valueOf(stats.totalGames));
@@ -288,7 +389,7 @@ public class StatsOverlay {
         });
     }
 
-    // Modelo interno de estatísticas (simples)
+    // Modelo interno de estatísticas
     private static class Stats {
         int totalGames = 0;
         int wins = 0;

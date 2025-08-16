@@ -15,12 +15,13 @@ public class Game {
         System.out.println(this.dataSourceModel.getWord());
     }
     public boolean validateGuess(String chute) {
+        System.out.println("Chute: " + chute);
         rightQuantityWord=0;
         if (chute.length() != 5) {
             System.out.println("Tentativa inválida: precisa de 5 letras.");
             return false;
         }
-
+        chute = chute.toLowerCase();
         if(!dataSourceModel.searchWord(chute)){
             return false;
         }

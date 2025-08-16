@@ -5,6 +5,7 @@ import com.termo.gui.GameWindow;
 import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Random;
 import java.util.Scanner;
@@ -17,17 +18,19 @@ import static java.lang.System.in;
 public class DataSourceModel {
     private String filename = "datasource.txt";
     private String word;
+    Vector<String> palavras;
 
     public DataSourceModel(){
+        palavras = new Vector<>();
         setWord(processingData());
     }
 
 
     public String processingData(){
         try (InputStream in = DataSourceModel.class.getResourceAsStream("/" + filename);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
 
-                Vector<String> palavras = new Vector<>();
+
                 String line;
                 while ((line = reader.readLine()) != null) {
                     palavras.add(line);
@@ -45,10 +48,8 @@ public class DataSourceModel {
             File myFile = new File(DataSourceModel.class.getResource("/"+filename).toURI());
             RandomAccessFile data = new RandomAccessFile(myFile, "r");
             String line;
-            while ((line = data.readLine()) != null) {
-                if(line.toUpperCase().equals(word)){
-                    return true;
-                }
+            if(palavras.contains(word.toLowerCase())) {
+                return true;
             }
             return false;
         } catch (Exception e) {

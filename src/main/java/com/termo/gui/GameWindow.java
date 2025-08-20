@@ -147,8 +147,7 @@ public class GameWindow {
         leftBtn.setToolTipText("Estatísticas");
         updateButtonSize(leftBtn);
         leftBtn.addActionListener(e -> {
-            if (statsOverlay == null) statsOverlay = new StatsOverlay(mainFrame);
-            statsOverlay.show(false);
+            usuario.getPerfil().show(false, mainFrame);
         });
 
         // Título responsivo

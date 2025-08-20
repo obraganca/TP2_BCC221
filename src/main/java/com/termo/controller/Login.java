@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Login {
-    // ⚠️ TORNE ESTÁTICO para acesso global
     private static Map<String, Usuario> usuarios = new HashMap<>();
     private static final String FILE_PATH = "usuarios.dat";
 
@@ -13,15 +12,21 @@ public class Login {
     static {
         usuarios = carregarUsuarios();
     }
+    private static String normalizarNome(String nome) {
+        return nome != null ? nome.trim().toLowerCase() : null;
+    }
 
     public static boolean loginOuCadastrar(String nome, String senha) {
         Usuario usuario = usuarios.get(nome);
+        String nomeNormalizado = normalizarNome(nome);
 
         if (usuario != null) {
+            // Usuário já existe → autenticar
             return usuario.getSenha().equals(senha);
         } else {
-            usuarios.put(nome, new Usuario(nome, senha));
-            salvarUsuarios(); // Agora pode chamar diretamente
+            // Usuário não existe → cadastrar
+            usuarios.put(nomeNormalizado, new Usuario(nomeNormalizado, senha));
+            salvarUsuarios();
             return true;
         }
     }
@@ -41,7 +46,6 @@ public class Login {
         }
     }
 
-    // ⚠️ MÉTODO ESTÁTICO para acesso global
     public static void salvarUsuarios() {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_PATH))) {
             System.out.println("=== SALVANDO USUÁRIOS ===");

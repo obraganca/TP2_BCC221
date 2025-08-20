@@ -7,6 +7,7 @@ import java.util.Map;
 public class Login {
     private static Map<String, Usuario> usuarios = new HashMap<>();
     private static final String FILE_PATH = "usuarios.dat";
+    private Usuario usuarioLogado;
 
     // Bloco estático para inicialização
     static {
@@ -16,20 +17,23 @@ public class Login {
         return nome != null ? nome.trim().toLowerCase() : null;
     }
 
-    public static boolean loginOuCadastrar(String nome, String senha) {
-        Usuario usuario = usuarios.get(nome);
-        String nomeNormalizado = normalizarNome(nome);
-
-        if (usuario != null) {
-            // Usuário já existe → autenticar
-            return usuario.getSenha().equals(senha);
+    public boolean loginOuCadastrar(String nome, String senha) {
+        if (usuarios.containsKey(nome)) {
+            Usuario usuario = usuarios.get(nome);
+            if (usuario.getSenha().equals(senha)) {
+                this.usuarioLogado = usuario; // ✅ Armazena o usuário logado
+                return true;
+            }
+            return false;
         } else {
-            // Usuário não existe → cadastrar
-            usuarios.put(nomeNormalizado, new Usuario(nomeNormalizado, senha));
+            Usuario novoUsuario = new Usuario(nome, senha);
+            usuarios.put(nome, novoUsuario);
+            this.usuarioLogado = novoUsuario; // ✅ Armazena o usuário logado
             salvarUsuarios();
             return true;
         }
     }
+
 
     public static Usuario getUsuario(String nome) {
         return usuarios.get(nome);

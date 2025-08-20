@@ -6,11 +6,12 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
 
-import com.termo.controller.Game;
+import com.termo.controller.*;
 import com.termo.gui.components.LetterBox;
 import com.termo.gui.components.RoundedBorder;
 
 public class GameWindow {
+    private Login sistemaLogin;
     private JFrame mainFrame;
     private JLabel headerLabel;
     private JLabel warnLabel;
@@ -26,6 +27,7 @@ public class GameWindow {
     private int currentRow = 0;
     private int currentCol = 0;
     private Game jogo;
+    private Usuario usuario;
 
     private final Map<Character, JButton> keyButtons = new HashMap<>();
     private StatsOverlay statsOverlay;
@@ -35,9 +37,10 @@ public class GameWindow {
     private boolean isVerySmallScreen = false;
 
     public GameWindow() {
+        this.sistemaLogin = new Login();
+        sistemaLogin.debugUsuarios();
         jogo = new Game();
-        prepareGUI();
-        showEventDemo();
+        showLoginDialog();
     }
 
     private void prepareGUI() {
@@ -77,6 +80,39 @@ public class GameWindow {
         });
 
         mainFrame.setLocationRelativeTo(null);
+    }
+    private void showLoginDialog() {
+        JTextField usuarioField = new JTextField();
+        JPasswordField senhaField = new JPasswordField();
+
+        Object[] message = {
+                "Usuário:", usuarioField,
+                "Senha:", senhaField
+        };
+
+        int option = JOptionPane.showConfirmDialog(
+                null, message, "Login ou Cadastro", JOptionPane.OK_CANCEL_OPTION
+        );
+
+        if (option == JOptionPane.OK_OPTION) {
+            String nome = usuarioField.getText();
+            String senha = new String(senhaField.getPassword());
+
+            boolean autenticado = sistemaLogin.loginOuCadastrar(nome, senha);
+
+            if (autenticado) {
+                usuario = sistemaLogin.getUsuario(nome);
+                System.out.println("Usuário logado Hash: " + System.identityHashCode(usuario));
+                JOptionPane.showMessageDialog(null, "Bem-vindo, " + nome + "!");
+                prepareGUI();
+                showEventDemo();
+            } else {
+                JOptionPane.showMessageDialog(null, "Senha incorreta!", "Erro", JOptionPane.ERROR_MESSAGE);
+                showLoginDialog(); // Tenta novamente
+            }
+        } else {
+            System.exit(0); // Sai do jogo se cancelar
+        }
     }
 
     private void setupInitialWindowSize() {
@@ -635,8 +671,17 @@ public class GameWindow {
                     setWarnMessage("Fim do jogo !");
 
                     boolean won = jogo.getRightQuantityWord() == jogo.getWordLength();
-                    statsOverlay.recordGame(won, won ? currentRow + 1 : 0);
-                    statsOverlay.show(won);
+                    if (won) usuario.getPerfil().registrarVitoria(currentRow+1);
+                    if (!won) usuario.getPerfil().registrarDerrota(currentRow+1);
+                    System.out.println("=== ANTES DE MOSTRAR ESTATÍSTICAS ===");
+                    System.out.println("HashCode do usuário: " + System.identityHashCode(usuario));
+                    System.out.println("HashCode do perfil: " + System.identityHashCode(usuario.getPerfil()));
+                    System.out.println("Dados: " + usuario.getPerfil().toString());
+
+                    usuario.getPerfil().show(won, mainFrame);
+//                    statsOverlay.recordGame(won, won ? currentRow + 1 : 0);
+//                    statsOverlay.show(won);
+
                 }
             } else {
                 setWarnMessage("essa palavra não é aceita");

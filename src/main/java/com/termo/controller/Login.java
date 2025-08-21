@@ -6,18 +6,17 @@ import java.util.Map;
 
 public class Login {
     private static Map<String, Usuario> usuarios = new HashMap<>();
-    private static final String FILE_PATH = "usuarios.dat";
+    private static String FILE_PATH;
     private Usuario usuarioLogado;
 
     // Bloco estático para inicialização
-    static {
-        usuarios = carregarUsuarios();
-    }
+
     private static String normalizarNome(String nome) {
         return nome != null ? nome.trim().toLowerCase() : null;
     }
 
     public boolean loginOuCadastrar(String nome, String senha) {
+        usuarios = carregarUsuarios();
         if (usuarios.containsKey(nome)) {
             Usuario usuario = usuarios.get(nome);
             if (usuario.getSenha().equals(senha)) {
@@ -85,5 +84,8 @@ public class Login {
         System.out.println("Arquivo existe: " + arquivo.exists());
         System.out.println("Caminho absoluto: " + arquivo.getAbsolutePath());
         System.out.println("Pode escrever: " + arquivo.canWrite());
+    }
+    public static void setFilePath(String filePath) {
+        FILE_PATH = new String("filePath");
     }
 }

@@ -2,6 +2,8 @@ package com.termo.model;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Random;
 import java.util.Vector;
 import java.util.Map;
@@ -22,7 +24,7 @@ public class DataSourceModel {
     }
 
     public String processingData(){
-        try (InputStream in = DataSourceModel.class.getResourceAsStream("/" + filename);
+        try (InputStream in = Files.newInputStream(Paths.get(filename));
              BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
 
             String line;

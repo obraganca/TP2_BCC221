@@ -4,7 +4,7 @@ import com.termo.gui.GameWindow;
 
 public class TermoApp {
     public static void main(String[] args) {
-        Login.setFilePath(args[2]);
+        Login.setFilePath("/home/obraganca/Documents/TP2_BCC221/src/main/resources/datasource.txt");
         javax.swing.SwingUtilities.invokeLater(() -> {
             new GameWindow().showEventDemo();
         });

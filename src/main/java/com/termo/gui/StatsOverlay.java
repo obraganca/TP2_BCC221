@@ -23,6 +23,8 @@ public class StatsOverlay {
     private transient JPanel distributionContainer;
     private transient boolean uiInitialized = false;
 
+    private transient Runnable onClose;
+
     public StatsOverlay(PerfilJogador perfilJogador) {
         this.perfilJogador = perfilJogador;
     }
@@ -44,13 +46,42 @@ public class StatsOverlay {
         });
     }
 
+    // Nova versão que aceita um callback a ser executado ao fechar
+    public void show(boolean won, JFrame parentFrame, Runnable onClose) {
+        this.onClose = onClose;
+        this.parentFrame = parentFrame;
+        SwingUtilities.invokeLater(() -> {
+            initUI();
+            totalGamesLabel.setText(String.valueOf(perfilJogador.getJogos()));
+            int pct = (perfilJogador.getJogos() == 0) ? 0 : (int) ((perfilJogador.getVitorias() * 100.0) / perfilJogador.getJogos());
+            winPercentLabel.setText(pct + "%");
+            streakLabel.setText(String.valueOf(perfilJogador.getSequenciaVitorias()));
+            bestStreakLabel.setText(String.valueOf(perfilJogador.getMelhorSequencia()));
+
+            rebuildDistribution();
+
+            overlayPanel.setVisible(true);
+            overlayPanel.requestFocusInWindow();
+        });
+    }
+
+
     public void hide() {
         SwingUtilities.invokeLater(() -> {
             if (!uiInitialized) return;
             overlayPanel.setVisible(false);
+            // dispara callback (apenas uma vez)
+            if (onClose != null) {
+                Runnable cb = onClose;
+                onClose = null;
+                try {
+                    cb.run(); // já estamos no EDT
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
         });
     }
-
     private void initUI() {
         if (uiInitialized) return;
         uiInitialized = true;

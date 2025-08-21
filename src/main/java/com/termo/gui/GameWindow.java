@@ -44,6 +44,7 @@ public class GameWindow {
         sistemaLogin.debugUsuarios();
         jogo = new Game();
         showLoginDialog();
+        this.statsOverlay = new StatsOverlay(usuario.getPerfil());
     }
 
     private void prepareGUI() {
@@ -150,7 +151,6 @@ public class GameWindow {
         leftBtn.setToolTipText("Estatísticas");
         updateButtonSize(leftBtn);
         leftBtn.addActionListener(e -> {
-            statsOverlay = new StatsOverlay(usuario.getPerfil());
             statsOverlay.show(false, mainFrame);
         });
 
@@ -184,9 +184,11 @@ public class GameWindow {
                     "Deseja sair para a tela de login? O jogo atual será perdido.",
                     "Confirmar saída", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                exitToLogin();
+                // mostra as estatísticas e, quando o usuário fechar a overlay, volta ao login
+                statsOverlay.show(this.hasWon(), mainFrame, GameWindow.this::exitToLogin);
             }
         });
+
 
         settingsMenu.add(resetItem);
         settingsMenu.add(exitItem);
@@ -759,7 +761,7 @@ public class GameWindow {
                     System.out.println("HashCode do usuário: " + System.identityHashCode(usuario));
                     System.out.println("HashCode do perfil: " + System.identityHashCode(usuario.getPerfil()));
                     System.out.println("Dados: " + usuario.getPerfil().toString());
-                    statsOverlay = new StatsOverlay(usuario.getPerfil());
+
                     statsOverlay.show(this.hasWon(), mainFrame);
 
                 }

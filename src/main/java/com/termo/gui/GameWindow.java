@@ -11,6 +11,7 @@ import com.termo.gui.components.LetterBox;
 import com.termo.gui.components.RoundedBorder;
 
 public class GameWindow {
+    private StatsOverlay statsOverlay;
     private Login sistemaLogin;
     private JFrame mainFrame;
     private JLabel headerLabel;
@@ -149,7 +150,8 @@ public class GameWindow {
         leftBtn.setToolTipText("Estatísticas");
         updateButtonSize(leftBtn);
         leftBtn.addActionListener(e -> {
-            usuario.getPerfil().show(false, mainFrame);
+            statsOverlay = new StatsOverlay(usuario.getPerfil());
+            statsOverlay.show(false, mainFrame);
         });
 
         // Título responsivo
@@ -757,8 +759,8 @@ public class GameWindow {
                     System.out.println("HashCode do usuário: " + System.identityHashCode(usuario));
                     System.out.println("HashCode do perfil: " + System.identityHashCode(usuario.getPerfil()));
                     System.out.println("Dados: " + usuario.getPerfil().toString());
-
-                    usuario.getPerfil().show(this.hasWon(), mainFrame);
+                    statsOverlay = new StatsOverlay(usuario.getPerfil());
+                    statsOverlay.show(this.hasWon(), mainFrame);
 
                 }
             } else {

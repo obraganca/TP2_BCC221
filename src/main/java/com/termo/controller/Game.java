@@ -11,8 +11,8 @@ public class Game {
     private int rightQuantityWord=0;
     private char[] coresresultado = new char[5]; // o vetor de char coresresultado tem os valores G Y ou B em cada uma das posições armazenando um sinal para a cor de cada letra da tentativa atual
     private DataSourceModel dataSourceModel;
-    public Game() {
-        this.dataSourceModel = new DataSourceModel();
+    public Game(String file) {
+        this.dataSourceModel = new DataSourceModel(file);
         System.out.println(this.dataSourceModel.getWord());
     }
 

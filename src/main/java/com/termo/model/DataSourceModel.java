@@ -9,12 +9,13 @@ import java.util.HashMap;
 import java.text.Normalizer;
 
 public class DataSourceModel {
-    private String filename = "datasource.txt";
+    private String filename;
     private String word;
     Vector<String> palavras;
     private Map<String, String> normalizedToOriginal; // normalizada -> original
 
-    public DataSourceModel(){
+    public DataSourceModel(String path){
+        filename = path;
         palavras = new Vector<>();
         normalizedToOriginal = new HashMap<>();
         setWord(processingData());

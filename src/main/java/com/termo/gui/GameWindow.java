@@ -11,6 +11,7 @@ import com.termo.gui.components.LetterBox;
 import com.termo.gui.components.RoundedBorder;
 
 public class GameWindow {
+    String file;
     private StatsOverlay statsOverlay;
     private Login sistemaLogin;
     private JFrame mainFrame;
@@ -39,10 +40,11 @@ public class GameWindow {
     private boolean isSmallScreen = false;
     private boolean isVerySmallScreen = false;
 
-    public GameWindow() {
+    public GameWindow(String file) {
+        this.file = file;
         this.sistemaLogin = new Login();
         sistemaLogin.debugUsuarios();
-        jogo = new Game();
+        jogo = new Game(file);
         showLoginDialog();
     }
 
@@ -271,7 +273,7 @@ public class GameWindow {
 
     private void resetGame() {
         // cria novo jogo (reseta palavra/estado)
-        jogo = new Game();
+        jogo = new Game(file);
 
         // reseta índices
         currentRow = 0;
@@ -325,7 +327,7 @@ public class GameWindow {
             mainFrame.dispose();
         }
         usuario = null;
-        jogo = new Game();
+        jogo = new Game(file);
         currentRow = 0;
         currentCol = 0;
 

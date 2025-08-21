@@ -11,6 +11,7 @@ import com.termo.gui.components.LetterBox;
 import com.termo.gui.components.RoundedBorder;
 
 public class GameWindow {
+    String file;
     private StatsOverlay statsOverlay;
     private Login sistemaLogin;
     private JFrame mainFrame;
@@ -39,12 +40,12 @@ public class GameWindow {
     private boolean isSmallScreen = false;
     private boolean isVerySmallScreen = false;
 
-    public GameWindow() {
+    public GameWindow(String file) {
+        this.file = file;
         this.sistemaLogin = new Login();
         sistemaLogin.debugUsuarios();
-        jogo = new Game();
+        jogo = new Game(file);
         showLoginDialog();
-        this.statsOverlay = new StatsOverlay(usuario.getPerfil());
     }
 
     private void prepareGUI() {
@@ -151,6 +152,7 @@ public class GameWindow {
         leftBtn.setToolTipText("Estatísticas");
         updateButtonSize(leftBtn);
         leftBtn.addActionListener(e -> {
+            statsOverlay = new StatsOverlay(usuario.getPerfil());
             statsOverlay.show(false, mainFrame);
         });
 
@@ -185,6 +187,7 @@ public class GameWindow {
                     "Confirmar saída", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 // mostra as estatísticas e, quando o usuário fechar a overlay, volta ao login
+                statsOverlay = new StatsOverlay(usuario.getPerfil());
                 statsOverlay.show(this.hasWon(), mainFrame, GameWindow.this::exitToLogin);
             }
         });
@@ -273,7 +276,7 @@ public class GameWindow {
 
     private void resetGame() {
         // cria novo jogo (reseta palavra/estado)
-        jogo = new Game();
+        jogo = new Game(file);
 
         // reseta índices
         currentRow = 0;
@@ -333,7 +336,7 @@ public class GameWindow {
             mainFrame.dispose();
         }
         usuario = null;
-        jogo = new Game();
+        jogo = new Game(file);
         currentRow = 0;
         currentCol = 0;
 
@@ -773,6 +776,7 @@ public class GameWindow {
                     System.out.println("HashCode do perfil: " + System.identityHashCode(usuario.getPerfil()));
                     System.out.println("Dados: " + usuario.getPerfil().toString());
 
+                    statsOverlay = new StatsOverlay(usuario.getPerfil());
                     statsOverlay.show(this.hasWon(), mainFrame);
 
                 }

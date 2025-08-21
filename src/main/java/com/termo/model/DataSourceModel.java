@@ -2,6 +2,8 @@ package com.termo.model;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Random;
 import java.util.Vector;
 import java.util.Map;
@@ -9,19 +11,20 @@ import java.util.HashMap;
 import java.text.Normalizer;
 
 public class DataSourceModel {
-    private String filename = "datasource.txt";
+    private String filename;
     private String word;
     Vector<String> palavras;
     private Map<String, String> normalizedToOriginal; // normalizada -> original
 
-    public DataSourceModel(){
+    public DataSourceModel(String path){
+        filename = path;
         palavras = new Vector<>();
         normalizedToOriginal = new HashMap<>();
         setWord(processingData());
     }
 
     public String processingData(){
-        try (InputStream in = DataSourceModel.class.getResourceAsStream("/" + filename);
+        try (InputStream in = Files.newInputStream(Paths.get(filename));
              BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
 
             String line;

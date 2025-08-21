@@ -17,6 +17,8 @@ public class GameWindow {
     private JLabel warnLabel;
     private JPanel headerPanel;
     private JLabel statusLabel;
+    private JPanel southPanel;
+
     private JPanel controlPanel;
     private JScrollPane gameScrollPane; // Para telas pequenas
 
@@ -161,6 +163,37 @@ public class GameWindow {
         rightBtn.setToolTipText("Configurações");
         updateButtonSize(rightBtn);
 
+        // Menu de configurações (Resetar / Sair)
+        JPopupMenu settingsMenu = new JPopupMenu();
+        JMenuItem resetItem = new JMenuItem("Resetar jogo");
+        JMenuItem exitItem = new JMenuItem("Sair");
+
+        resetItem.addActionListener(ev -> {
+            int confirm = JOptionPane.showConfirmDialog(mainFrame,
+                    "Deseja realmente resetar o jogo? A palavra e o estado serão reiniciados.",
+                    "Confirmar reset", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                resetGame();
+            }
+        });
+
+        exitItem.addActionListener(ev -> {
+            int confirm = JOptionPane.showConfirmDialog(mainFrame,
+                    "Deseja sair para a tela de login? O jogo atual será perdido.",
+                    "Confirmar saída", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                exitToLogin();
+            }
+        });
+
+        settingsMenu.add(resetItem);
+        settingsMenu.add(exitItem);
+
+        rightBtn.addActionListener(e -> {
+            // mostra o menu logo abaixo do botão
+            settingsMenu.show(rightBtn, 0, rightBtn.getHeight());
+        });
+
         topRow.add(leftBtn);
         topRow.add(headerLabel);
         topRow.add(rightBtn);
@@ -181,6 +214,7 @@ public class GameWindow {
         warnPanel.add(warnLabel);
         headerPanel.add(warnPanel, BorderLayout.SOUTH);
     }
+
 
     private void createGamePanel() {
         // Grid do jogo
@@ -212,6 +246,7 @@ public class GameWindow {
         statusLabel.setSize(350, 100);
         statusLabel.setForeground(Color.WHITE);
     }
+
     private void layoutComponents() {
         mainFrame.add(headerPanel, BorderLayout.NORTH);
 
@@ -224,12 +259,75 @@ public class GameWindow {
             mainFrame.add(centerWrapper, BorderLayout.CENTER);
         }
 
-        // South panel com teclado e status
-        JPanel southPanel = new JPanel(new BorderLayout());
+        // South panel com teclado e status (agora é campo para permitir update)
+        southPanel = new JPanel(new BorderLayout());
         southPanel.setOpaque(false);
         southPanel.add(virtualKeyboard, BorderLayout.CENTER);
         southPanel.add(statusLabel, BorderLayout.SOUTH);
         mainFrame.add(southPanel, BorderLayout.SOUTH);
+    }
+
+    private void resetGame() {
+        // cria novo jogo (reseta palavra/estado)
+        jogo = new Game();
+
+        // reseta índices
+        currentRow = 0;
+        currentCol = 0;
+
+        // limpa warn/status
+        setWarnMessage("");
+        if (statusLabel != null) statusLabel.setText("");
+
+        // recria o teclado virtual (caso acumule cores)
+        virtualKeyboard = new VirtualKeyboard(this::handleVirtualKey, isVerySmallScreen, isSmallScreen, this.hasWon());
+
+        // substitui o teclado no painel sul
+        if (southPanel != null) {
+            southPanel.removeAll();
+            southPanel.add(virtualKeyboard, BorderLayout.CENTER);
+            southPanel.add(statusLabel, BorderLayout.SOUTH);
+            southPanel.revalidate();
+            southPanel.repaint();
+        }
+
+        // limpa e reconfigura as letterBoxes para o estado inicial
+        if (letterBoxes != null) {
+            for (int r = 0; r < ROW; r++) {
+                for (int c = 0; c < COLUMN; c++) {
+                    LetterBox box = letterBoxes[r][c];
+                    if (box == null) continue;
+                    box.setText("");
+                    box.setOpaque(r != currentRow); // linha atual fica transparente como antes
+                    box.setBackground(r == currentRow ? null : Color.decode("#615458"));
+                    box.setBorder(new RoundedBorder(15, "#4c4347", 6));
+                    box.setEnabled(true);
+                    box.setEditable(true);
+                }
+            }
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            if (letterBoxes != null && letterBoxes[0][0] != null) {
+                letterBoxes[0][0].requestFocusInWindow();
+            }
+        });
+
+        controlPanel.revalidate();
+        controlPanel.repaint();
+    }
+
+    private void exitToLogin() {
+        // Esconde/fecha a janela atual
+        if (mainFrame != null) {
+            mainFrame.dispose();
+        }
+        usuario = null;
+        jogo = new Game();
+        currentRow = 0;
+        currentCol = 0;
+
+        SwingUtilities.invokeLater(() -> showLoginDialog());
     }
 
 

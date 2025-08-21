@@ -362,6 +362,75 @@ public class GameWindow {
         }
     }
 
+    // --- Adicione este método na classe GameWindow ---
+    private KeyAdapter createLetterBoxKeyListener(final int row, final int col) {
+        return new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                // keyTyped entrega o caractere composto (acentos, ç, etc.)
+                if (row != currentRow) return; // só permite digitar na linha atual
+
+                char ch = e.getKeyChar();
+                if (Character.isLetter(ch)) {
+                    // Insere a letra (maiuscula) na caixa e avança
+                    String s = String.valueOf(ch).toUpperCase();
+                    LetterBox box = letterBoxes[row][col];
+                    box.setText(s);
+
+                    // atualiza currentCol se estivermos na mesma coluna
+                    if (currentRow == row) {
+                        // se digitou na última coluna, mantém lá; caso contrário, avança
+                        if (currentCol == col && currentCol < COLUMN - 1) {
+                            currentCol++;
+                        } else {
+                            currentCol = Math.min(COLUMN - 1, col + 1);
+                        }
+                        final int nextCol = currentCol;
+                        // pede foco no próximo componente (no EDT)
+                        SwingUtilities.invokeLater(() -> {
+                            if (letterBoxes[row][nextCol] != null) {
+                                letterBoxes[row][nextCol].requestFocusInWindow();
+                            }
+                        });
+                    }
+                    // consome o evento pra evitar duplicação
+                    e.consume();
+                }
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (row != currentRow) return;
+
+                int keyCode = e.getKeyCode();
+                LetterBox currentBox = letterBoxes[currentRow][currentCol];
+
+                if (keyCode == KeyEvent.VK_BACK_SPACE) {
+                    // comportamento: se a caixa atual está vazia, volta e apaga a anterior
+                    if (currentBox.getText().isEmpty() && currentCol > 0) {
+                        moveToPreviousColumn();
+                        letterBoxes[currentRow][currentCol].setText("");
+                        letterBoxes[currentRow][currentCol].requestFocusInWindow();
+                    } else {
+                        currentBox.setText("");
+                        setWarnMessage("");
+                    }
+                    e.consume();
+                } else if (keyCode == KeyEvent.VK_ENTER && currentCol == COLUMN - 1) {
+                    submitGuess();
+                    e.consume();
+                } else if (keyCode == KeyEvent.VK_RIGHT && currentCol < COLUMN - 1) {
+                    moveToNextColumn();
+                    e.consume();
+                } else if (keyCode == KeyEvent.VK_LEFT && currentCol > 0) {
+                    moveToPreviousColumn();
+                    e.consume();
+                }
+            }
+        };
+    }
+
+
 
     private void recreateLayout() {
         // Store current letter boxes state before recreating
@@ -419,12 +488,9 @@ public class GameWindow {
 
                 // Add key listener
                 final int r = row, c = col;
-                newBox.addKeyListener(new KeyAdapter() {
-                    @Override
-                    public void keyPressed(KeyEvent e) {
-                        handleKeyPress(e, r, c);
-                    }
-                });
+                newBox.addKeyListener(createLetterBoxKeyListener(r, c));
+
+
 
                 letterBoxes[row][col] = newBox;
                 controlPanel.add(newBox);
@@ -596,12 +662,8 @@ public class GameWindow {
                 }
 
                 final int r = row, c = col;
-                box.addKeyListener(new KeyAdapter() {
-                    @Override
-                    public void keyPressed(KeyEvent e) {
-                        handleKeyPress(e, r, c);
-                    }
-                });
+
+                box.addKeyListener(createLetterBoxKeyListener(r, c));
 
                 letterBoxes[row][col] = box;
                 controlPanel.add(box);
@@ -618,11 +680,12 @@ public class GameWindow {
         if (row != currentRow) return;
 
         int keyCode = e.getKeyCode();
+        char keyChar = e.getKeyChar();
         LetterBox currentBox = letterBoxes[currentRow][currentCol];
 
-        if (keyCode >= KeyEvent.VK_A && keyCode <= KeyEvent.VK_Z) {
-            char c = e.getKeyChar();
-            currentBox.setText(String.valueOf(c).toUpperCase());
+        // aceita letras incluindo acentuadas e ç
+        if (Character.isLetter(keyChar)) {
+            currentBox.setText(String.valueOf(keyChar).toUpperCase());
             moveToNextColumn();
         } else if (keyCode == KeyEvent.VK_BACK_SPACE) {
             if (currentBox.getText().isEmpty() && currentCol > 0) {
@@ -630,14 +693,15 @@ public class GameWindow {
             }
             letterBoxes[currentRow][currentCol].setText("");
             setWarnMessage("");
-        } else if (keyCode == KeyEvent.VK_ENTER && currentCol == 4) {
+        } else if (keyCode == KeyEvent.VK_ENTER && currentCol == COLUMN - 1) {
             submitGuess();
-        } else if (keyCode == KeyEvent.VK_RIGHT && currentCol < 4) {
+        } else if (keyCode == KeyEvent.VK_RIGHT && currentCol < COLUMN - 1) {
             moveToNextColumn();
         } else if (keyCode == KeyEvent.VK_LEFT && currentCol > 0) {
             moveToPreviousColumn();
         }
     }
+
 
     private void moveToNextColumn() {
         if (currentCol < 4) {
@@ -710,12 +774,24 @@ public class GameWindow {
     public void guessProcessing() {
         char resultado[] = jogo.getResultado();
 
-        StringBuilder guessSb = new StringBuilder();
-        for (int c = 0; c < COLUMN; c++) {
-            guessSb.append(letterBoxes[currentRow][c].getText());
+        // Usa a palavra tentativa canonical (pode ter acentos) que foi guardada pelo Game
+        String guess = jogo.getpalavratentativa();
+        if (guess == null || guess.length() != COLUMN) {
+            // fallback para ler das caixas (comportamento original)
+            StringBuilder guessSb = new StringBuilder();
+            for (int c = 0; c < COLUMN; c++) {
+                guessSb.append(letterBoxes[currentRow][c].getText());
+            }
+            guess = guessSb.toString().toUpperCase();
         }
-        String guess = guessSb.toString().toUpperCase();
 
+        // Substitui o texto das LetterBox pela forma canonical (assim mostra acentos/ç)
+        for (int i = 0; i < COLUMN; i++) {
+            String ch = String.valueOf(guess.charAt(i));
+            letterBoxes[currentRow][i].setText(ch);
+        }
+
+        // Agora aplica cores e desabilita edição, como antes
         for (int i = 0; i < COLUMN; i++) {
             LetterBox box = letterBoxes[currentRow][i];
             box.setEditable(false);
@@ -741,6 +817,7 @@ public class GameWindow {
         updateKeyboardColors(guess, resultado);
         controlPanel.repaint();
     }
+
 
     // Atualize o método updateKeyboardColors para delegar para o VirtualKeyboard:
     private void updateKeyboardColors(String guess, char[] resultado) {

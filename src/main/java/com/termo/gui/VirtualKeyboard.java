@@ -4,6 +4,7 @@ import com.termo.gui.components.RoundedBorder;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -115,7 +116,12 @@ public class VirtualKeyboard extends JPanel {
         Color white = Color.WHITE;
 
         for (int i = 0; i < Math.min(guess.length(), resultado.length); i++) {
-            char ch = Character.toUpperCase(guess.charAt(i));
+            char chOrig = guess.charAt(i);
+            // normaliza o caractere para sua forma base (remove acento/cedilha)
+            String norm = Normalizer.normalize(String.valueOf(chOrig), Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+            if (norm.isEmpty()) continue;
+            char ch = Character.toUpperCase(norm.charAt(0));
+
             JButton keyBtn = keyButtons.get(ch);
             if (keyBtn == null) continue;
 
@@ -144,6 +150,7 @@ public class VirtualKeyboard extends JPanel {
             }
         }
     }
+
 
     private boolean colorsEqual(Color a, Color b) {
         return a != null && b != null && a.getRGB() == b.getRGB();

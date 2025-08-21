@@ -663,6 +663,11 @@ public class GameWindow {
                     box.setOpaque(true);
                     box.setBackground(Color.decode("#615458"));
                     box.setBorder(new RoundedBorder(15, "#615458", 6));
+                    box.setEnabled(false); // ← DESABILITA EDIÇÃO
+                    box.setEditable(false); // ← DESABILITA EDIÇÃO
+                } else {
+                    box.setEnabled(true); // ← HABILITA APENAS LINHA ATUAL
+                    box.setEditable(true); // ← HABILITA APENAS LINHA ATUAL
                 }
 
                 final int r = row, c = col;

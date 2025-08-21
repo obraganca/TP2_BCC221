@@ -158,10 +158,6 @@ public class StatsOverlay {
         int padding = Math.max(10, Math.min(20, owner.getWidth() / 60));
         footer.setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
 
-        JLabel nextLabel = new JLabel("<html>próxima palavra em<br><span style='font-size:22pt'>15:02:51</span></html>");
-        nextLabel.setForeground(Color.WHITE);
-        footer.add(nextLabel, BorderLayout.WEST);
-
         JButton share = new JButton("compartilhe");
         share.setFocusable(false);
 

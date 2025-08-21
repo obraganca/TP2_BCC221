@@ -18,8 +18,9 @@ public class GameWindow {
     private JPanel headerPanel;
     private JLabel statusLabel;
     private JPanel controlPanel;
-    private JPanel keyboardPanel;
     private JScrollPane gameScrollPane; // Para telas pequenas
+
+    private VirtualKeyboard virtualKeyboard;
 
     public static final int COLUMN = 5;
     public static final int ROW = 6;
@@ -30,7 +31,6 @@ public class GameWindow {
     private Usuario usuario;
 
     private final Map<Character, JButton> keyButtons = new HashMap<>();
-    private StatsOverlay statsOverlay;
 
     // Configurações responsivas
     private boolean isSmallScreen = false;
@@ -205,15 +205,13 @@ public class GameWindow {
         updateGamePanelSize();
     }
 
+    // Substitua o método createKeyboardPanel por:
     private void createKeyboardPanel() {
-        keyboardPanel = createVirtualKeyboard();
-
-        // Status label
+        virtualKeyboard = new VirtualKeyboard(this::handleVirtualKey, isVerySmallScreen, isSmallScreen, this.hasWon());
         statusLabel = new JLabel("", JLabel.CENTER);
         statusLabel.setSize(350, 100);
         statusLabel.setForeground(Color.WHITE);
     }
-
     private void layoutComponents() {
         mainFrame.add(headerPanel, BorderLayout.NORTH);
 
@@ -229,92 +227,12 @@ public class GameWindow {
         // South panel com teclado e status
         JPanel southPanel = new JPanel(new BorderLayout());
         southPanel.setOpaque(false);
-        southPanel.add(keyboardPanel, BorderLayout.CENTER);
+        southPanel.add(virtualKeyboard, BorderLayout.CENTER);
         southPanel.add(statusLabel, BorderLayout.SOUTH);
         mainFrame.add(southPanel, BorderLayout.SOUTH);
     }
 
-    private JPanel createVirtualKeyboard() {
-        keyButtons.clear();
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridBagLayout());
-        panel.setOpaque(false);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4, 4, 4, 4); // Espaçamento menor em telas pequenas
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        String row1 = "QWERTYUIOP";
-        String row2 = "ASDFGHJKL";
-        String row3[] = {"ENTER", "ZXCVBNM", "BACK"};
-
-        // Row 1
-        JPanel r1 = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
-        r1.setOpaque(false);
-        for (char ch : row1.toCharArray()) {
-            JButton b = makeKeyButton(String.valueOf(ch));
-            r1.add(b);
-            keyButtons.put(ch, b);
-        }
-        gbc.gridy = 0;
-        panel.add(r1, gbc);
-
-        // Row 2
-        JPanel r2 = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
-        r2.setOpaque(false);
-        for (char ch : row2.toCharArray()) {
-            JButton b = makeKeyButton(String.valueOf(ch));
-            r2.add(b);
-            keyButtons.put(ch, b);
-        }
-        gbc.gridy = 1;
-        panel.add(r2, gbc);
-
-        // Row 3
-        JPanel r3 = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
-        r3.setOpaque(false);
-
-        JButton enterBtn = makeKeyButton("ENTER");
-        updateSpecialKeySize(enterBtn, true);
-        r3.add(enterBtn);
-
-        for (char ch : row3[1].toCharArray()) {
-            JButton b = makeKeyButton(String.valueOf(ch));
-            r3.add(b);
-            keyButtons.put(ch, b);
-        }
-
-        JButton backBtn = makeKeyButton("BACK");
-        updateSpecialKeySize(backBtn, false);
-        backBtn.setText("←");
-        backBtn.setToolTipText("Backspace");
-        r3.add(backBtn);
-
-        gbc.gridy = 2;
-        panel.add(r3, gbc);
-
-        return panel;
-    }
-
-    private JButton makeKeyButton(String label) {
-        JButton btn = new JButton(label);
-        btn.setFocusable(false);
-        btn.setFont(new Font("Arial", Font.BOLD, getKeyboardFontSize()));
-        updateKeySize(btn);
-        btn.setBackground(Color.decode("#4c4347"));
-        btn.setForeground(Color.WHITE);
-        btn.setBorder(new RoundedBorder(8, "#4c4347", 2));
-        btn.setOpaque(true);
-
-        btn.addActionListener(e -> {
-            String key = label;
-            if ("←".equals(label)) key = "BACK";
-            handleVirtualKey(key);
-        });
-
-        return btn;
-    }
 
     private JButton makeHeaderButton(String label) {
         JButton b = new JButton(label);
@@ -486,16 +404,10 @@ public class GameWindow {
         }
     }
 
+    // Atualize o método updateKeyboardSizes para:
     private void updateKeyboardSizes() {
-        // Atualiza tamanho das teclas
-        for (JButton btn : keyButtons.values()) {
-            updateKeySize(btn);
-            btn.setFont(new Font("Arial", Font.BOLD, getKeyboardFontSize()));
-        }
-
-        // Atualiza teclas especiais se existir o painel
-        if (keyboardPanel != null) {
-            updateSpecialKeysInPanel(keyboardPanel);
+        if (virtualKeyboard != null) {
+            virtualKeyboard.updateSizes(isVerySmallScreen, isSmallScreen);
         }
     }
 
@@ -602,7 +514,6 @@ public class GameWindow {
         controlPanel.revalidate();
         controlPanel.repaint();
         mainFrame.setVisible(true);
-        statsOverlay = new StatsOverlay(mainFrame);
     }
 
     private void handleKeyPress(KeyEvent e, int row, int col) {
@@ -669,17 +580,23 @@ public class GameWindow {
                     controlPanel.requestFocus();
                     setWarnMessage("Fim do jogo !");
 
-                    boolean won = jogo.getRightQuantityWord() == jogo.getWordLength();
-                    if (won) usuario.getPerfil().registrarVitoria(currentRow+1);
-                    if (!won) usuario.getPerfil().registrarDerrota(currentRow+1);
+                    if (this.hasWon()){
+                        usuario.getPerfil().registrarVitoria(currentRow+1);
+                        virtualKeyboard.setWon(this.hasWon());
+                        for (int c = 0; c < COLUMN; c++) {
+                            for(int r = 0; r < ROW; r++){
+                                letterBoxes[r][c].setEnabled(false);
+                                letterBoxes[r][c].setEditable(false);
+                            }
+                        }
+                    }
+                    if (!this.hasWon()) usuario.getPerfil().registrarDerrota(currentRow+1);
                     System.out.println("=== ANTES DE MOSTRAR ESTATÍSTICAS ===");
                     System.out.println("HashCode do usuário: " + System.identityHashCode(usuario));
                     System.out.println("HashCode do perfil: " + System.identityHashCode(usuario.getPerfil()));
                     System.out.println("Dados: " + usuario.getPerfil().toString());
 
-                    usuario.getPerfil().show(won, mainFrame);
-//                    statsOverlay.recordGame(won, won ? currentRow + 1 : 0);
-//                    statsOverlay.show(won);
+                    usuario.getPerfil().show(this.hasWon(), mainFrame);
 
                 }
             } else {
@@ -687,6 +604,9 @@ public class GameWindow {
             }
         }
         controlPanel.repaint();
+    }
+    public boolean hasWon(){
+        return jogo.getRightQuantityWord() == jogo.getWordLength();
     }
 
     public void guessProcessing() {
@@ -724,48 +644,10 @@ public class GameWindow {
         controlPanel.repaint();
     }
 
+    // Atualize o método updateKeyboardColors para delegar para o VirtualKeyboard:
     private void updateKeyboardColors(String guess, char[] resultado) {
-        if (guess == null || resultado == null) return;
-
-        Color green = Color.decode("#3aa394");
-        Color yellow = Color.decode("#d3ad69");
-        Color disabledBg = Color.decode("#2f2a2c");
-        Color defaultBg = Color.decode("#4c4347");
-        Color white = Color.WHITE;
-
-        for (int i = 0; i < Math.min(guess.length(), resultado.length); i++) {
-            char ch = guess.charAt(i);
-            if (!Character.isLetter(ch)) continue;
-            ch = Character.toUpperCase(ch);
-            JButton keyBtn = keyButtons.get(ch);
-            if (keyBtn == null) continue;
-
-            Color currentBg = keyBtn.getBackground();
-
-            switch (resultado[i]) {
-                case 'G':
-                    keyBtn.setBackground(green);
-                    keyBtn.setForeground(white);
-                    keyBtn.setBorder(new RoundedBorder(8, "#3aa394", 2));
-                    break;
-                case 'Y':
-                    if (!colorsEqual(currentBg, green)) {
-                        keyBtn.setBackground(yellow);
-                        keyBtn.setForeground(white);
-                        keyBtn.setBorder(new RoundedBorder(8, "#d3ad69", 2));
-                    }
-                    break;
-                case 'B':
-                    if (!colorsEqual(currentBg, green) && !colorsEqual(currentBg, yellow)) {
-                        keyBtn.setBackground(disabledBg);
-                        keyBtn.setForeground(Color.decode("#bdb6b6"));
-                        keyBtn.setBorder(new RoundedBorder(8, "#2f2a2c", 2));
-                    }
-                    break;
-            }
-        }
+        virtualKeyboard.updateKeyboardColors(guess, resultado);
     }
-
     private boolean colorsEqual(Color a, Color b) {
         if (a == null && b == null) return true;
         if (a == null || b == null) return false;

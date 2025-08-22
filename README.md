@@ -24,11 +24,9 @@ Antes de começar, garanta que você tenha os seguintes softwares instalados em 
 
 Siga os passos abaixo para rodar o projeto localmente.
 
-**1. Clone o Repositório**
-```bash
-git clone [https://github.com/seu-usuario/TP2_BCC221.git](https://github.com/seu-usuario/TP2_BCC221.git)
-cd TP2_BCC221
-```
+**1. Descompacte o Projeto e Navegue até a Pasta**
+
+Primeiro, descompacte o arquivo `.zip` do projeto. Em seguida, abra um terminal (CMD, PowerShell, etc.) e utilize o comando `cd` para navegar até o diretório raiz do projeto descompactado (a pasta que contém o arquivo `pom.xml`).
 
 **2. Compile o Projeto**
 

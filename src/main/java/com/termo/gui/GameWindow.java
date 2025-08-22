@@ -347,6 +347,9 @@ public class GameWindow {
                         box.setEnabled(false);
                         box.setEditable(false);
                     } else {
+                        box.setOpaque(false);
+                        box.setBackground(null); // Remove o fundo colorido
+                        box.setBorder(new RoundedBorder(15, "#4c4347", 6)); // Restaura a borda padrão da linha ativa
                         box.setEnabled(true);
                         box.setEditable(true);
                     }

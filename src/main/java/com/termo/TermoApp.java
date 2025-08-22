@@ -17,7 +17,7 @@ public class TermoApp {
             // Cria uma nova instância da janela principal do jogo (GameWindow),
             // passando o caminho para o arquivo de palavras.
             // O método .showEventDemo() é então chamado para construir e exibir a janela.
-            new GameWindow("/home/samuel/Documents/UFOP/BCC221/TP2/src/main/resources/datasource.txt");
+            new GameWindow(args[0]);
         });
     }
 }

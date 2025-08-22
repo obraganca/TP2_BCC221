@@ -56,6 +56,8 @@ mvn exec:java -Dexec.mainClass="com.termo.TermoApp" -Dexec.args="caminho/para/pa
 
 Ao executar o comando, a janela do jogo será aberta.
 
+OBS: o caminho do arquivo original do jogo é: src/main/resources/datasource.txt
+
 ## Como Jogar
 
 1.  **Login/Cadastro:** Ao iniciar, uma tela de login aparecerá. Digite um nome de usuário e senha. Se o usuário não existir, um novo perfil será criado.
